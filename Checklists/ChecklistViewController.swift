@@ -16,16 +16,25 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        let row0item = CheckListItem()
-        row0item.text = "one"
-        row0item.checked = false
-        items.append(row0item)
-        
-        let row1item = CheckListItem()
-        row1item.text = "two"
-        row1item.checked = false
-        items.append(row1item)
+        loadChecklistItems()
     }
+    
+    func loadChecklistItems() {
+        
+        let path = dataFileDir()
+        if FileManager.default.fileExists(atPath: path.path) {
+            let data = NSData.init(contentsOfFile: path.path)
+            
+            do {
+                if let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data! as Data) as? [CheckListItem] {
+                    items = result
+                }                
+            } catch {
+                print("couldn't read file")
+            }
+        }
+    }
+    
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return items.count
@@ -49,6 +58,7 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
+        saveChecklistItems()
     }
     
     func configureCheckmarkForCell(cell: UITableViewCell, withCheclistItem  item: CheckListItem) {
@@ -74,13 +84,14 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
         
         let indexPaths = [indexPath]
         tableView.deleteRows(at: indexPaths, with: .automatic)
+        saveChecklistItems()
     }
     
-    func addItemViewControllerDidCancel(controller: AddItemTableViewController) {
+    func addItemViewControllerDidCancel(controller: ItemDetailViewController) {
         dismiss(animated: true, completion: nil)
     }
     
-    func addItemViewController(controller: AddItemTableViewController, didFinishAddingItem item: CheckListItem) {
+    func addItemViewController(controller: ItemDetailViewController, didFinishAddingItem item: CheckListItem) {
         
         let newRowIndex = items.count
         items.append(item)
@@ -89,9 +100,10 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
         let indexPaths = [indexPath]
         tableView.insertRows(at: indexPaths, with: .automatic)
         dismiss(animated: true, completion: nil)
+        saveChecklistItems()
     }
     
-    func addItemViewController(controller: AddItemTableViewController, didFinishEditingItem item: CheckListItem) {
+    func addItemViewController(controller: ItemDetailViewController, didFinishEditingItem item: CheckListItem) {
         
         if let index = items.firstIndex(of: item) {
             let indexPath = IndexPath(row: index, section: 0)
@@ -101,18 +113,42 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
         }
         
         dismiss(animated: true, completion: nil)
+        saveChecklistItems()
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
             
         let navigationController = segue.destination as! UINavigationController
-        let controller = navigationController.topViewController as! AddItemTableViewController
+        let controller = navigationController.topViewController as! ItemDetailViewController
             controller.delegate = self
             
         if segue.identifier == "EditItem" {
             if let indexPath = tableView.indexPath(for: sender as! UITableViewCell) {
                 controller.itemToEdit = items[indexPath.row]
             }
+        }
+    }
+    
+    // store
+    
+    func documentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
+    
+    func dataFileDir() -> URL {
+        return documentsDirectory().appendingPathComponent("Checklists.plist")
+    }
+    
+    func saveChecklistItems() {
+        
+        print("save \(dataFileDir())")
+        
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: items, requiringSecureCoding: false)
+            try data.write(to: dataFileDir())
+        } catch {
+            print("couldn't write file")
         }
     }
 }
