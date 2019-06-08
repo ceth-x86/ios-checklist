@@ -11,11 +11,13 @@ import UIKit
 class CheckListViewController: UITableViewController, AddItemViewControllerDelegate {
 
     var items: [CheckListItem] = []
+    var checklist: Checklist!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+        title = checklist.name
         loadChecklistItems()
     }
     
@@ -28,7 +30,7 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
             do {
                 if let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data! as Data) as? [CheckListItem] {
                     items = result
-                }                
+                }
             } catch {
                 print("couldn't read file")
             }
@@ -141,8 +143,6 @@ class CheckListViewController: UITableViewController, AddItemViewControllerDeleg
     }
     
     func saveChecklistItems() {
-        
-        print("save \(dataFileDir())")
         
         do {
             let data = try NSKeyedArchiver.archivedData(withRootObject: items, requiringSecureCoding: false)
