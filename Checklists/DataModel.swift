@@ -72,11 +72,18 @@ class DataModel {
             do {
                 if let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data! as Data) as? [Checklist] {
                     lists = result
+                    sortChecklists()
                 }
             } catch {
                 print("couldn't read file")
             }
         }
+    }
+    
+    func sortChecklists() {
+        lists.sort(by: {checklist1, checklist2 in return
+            checklist1.name.localizedCompare(checklist2.name) == ComparisonResult.orderedAscending
+        })
     }
 
 }
