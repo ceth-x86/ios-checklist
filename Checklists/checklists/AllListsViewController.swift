@@ -14,9 +14,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        lists.append(Checklist.init(name: "Birthdays"))
-        lists.append(Checklist.init(name: "Groceries"))
+        loadChecklists()
     }
 
     
@@ -103,4 +101,42 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
         tableView.deleteRows(at: indexPaths, with: .automatic)
         
     }
+    
+    // save & load
+    func documentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
+    
+    func dataFileDir() -> URL {
+        return documentsDirectory().appendingPathComponent("Checklists.plist")
+    }
+    
+    func saveChecklists() {
+        
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: lists, requiringSecureCoding: false)
+            try data.write(to: dataFileDir())
+        } catch {
+            print("couldn't write file")
+        }
+    }
+    
+    func loadChecklists() {
+        
+        let path = dataFileDir()
+        if FileManager.default.fileExists(atPath: path.path) {
+            let data = NSData.init(contentsOfFile: path.path)
+            
+            do {
+                if let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data! as Data) as? [Checklist] {
+                    lists = result
+                }
+            } catch {
+                print("couldn't read file")
+            }
+        }
+    }
+    
+    
 }
