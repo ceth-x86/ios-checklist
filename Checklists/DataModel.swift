@@ -50,7 +50,7 @@ class DataModel {
     }
     
     func dataFileDir() -> URL {
-        return documentsDirectory().appendingPathComponent("Data.plist")
+        return documentsDirectory().appendingPathComponent("Data2.plist")
     }
     
     func saveChecklists() {
